@@ -1,0 +1,34 @@
+# DeltaX Financial Tracker — API Worker.
+# Cloudflare "Workers Builds" bu klasörü (int/api) kök alır ve her push'ta `npx wrangler deploy` çalıştırır.
+#
+# Gizli değerler buraya YAZILMAZ; Cloudflare panelinde Worker > Settings > Variables and Secrets'ta
+# "Secret" olarak tanımlanır (bkz. int/README.md):
+#   ACCESS_TEAM_DOMAIN  örn. deltax.cloudflareaccess.com
+#   ACCESS_AUD          Access uygulamasının Audience (AUD) etiketi
+#   ADMIN_EMAILS        virgülle ayrılmış yönetici e-postaları (hesap, kategori, kur ve içe aktarma yetkisi)
+
+name = "deltax-finance-api"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# workers.dev adresi kapalı: API yalnızca Access'in koruduğu yol üzerinden erişilsin.
+workers_dev = false
+preview_urls = false
+
+routes = [
+  { pattern = "deltaxgames.com/int/api/*", zone_name = "deltaxgames.com" }
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "deltax-finance"
+# D1 veritabanını oluşturunca panelde görünen Database ID'yi buraya yaz.
+database_id = "358ceda0-ad7e-4d38-ac6b-afd65125900d"
+
+# Her iş günü 13:00 UTC (16:00 TR): TCMB günlük kurunu çek.
+# Cloudflare'da haftanın günü 1 = Pazar sayılır; o yüzden sayı yerine MON-FRI.
+[triggers]
+crons = ["0 13 * * MON-FRI"]
+
+[observability]
+enabled = true
