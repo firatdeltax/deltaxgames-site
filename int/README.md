@@ -44,7 +44,7 @@ gerçek rakam, e-posta listesi ya da gizli değer yazılmaz.
    - `ACCESS_TEAM_DOMAIN` = `<takım>.cloudflareaccess.com`
    - `ACCESS_AUD` = adım 2'deki AUD etiketi
    - `ADMIN_EMAILS` = yönetici e-postaları, virgülle (hesap, kategori, kur, içe aktarma yetkisi)
-4. **Settings → Triggers**: Route `deltaxgames.com/int/api/*` ve cron `0 13 * * 1-5` görünmeli (wrangler.toml'dan gelir).
+4. **Settings → Triggers**: Route `deltaxgames.com/int/api/*` ve cron `0 13 * * MON-FRI` görünmeli (wrangler.toml'dan gelir).
    Görünmüyorsa "Deployments" sekmesinden yeniden dağıt.
 
 ### 5. Veriyi aktar ve dene

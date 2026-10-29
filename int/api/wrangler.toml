@@ -26,8 +26,9 @@ database_name = "deltax-finance"
 database_id = "358ceda0-ad7e-4d38-ac6b-afd65125900d"
 
 # Her iş günü 13:00 UTC (16:00 TR): TCMB günlük kurunu çek.
+# Cloudflare'da haftanın günü 1 = Pazar sayılır; o yüzden sayı yerine MON-FRI.
 [triggers]
-crons = ["0 13 * * 1-5"]
+crons = ["0 13 * * MON-FRI"]
 
 [observability]
 enabled = true
