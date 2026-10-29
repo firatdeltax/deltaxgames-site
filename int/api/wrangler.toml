@@ -23,7 +23,7 @@ routes = [
 binding = "DB"
 database_name = "deltax-finance"
 # D1 veritabanını oluşturunca panelde görünen Database ID'yi buraya yaz.
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "358ceda0-ad7e-4d38-ac6b-afd65125900d"
 
 # Her iş günü 13:00 UTC (16:00 TR): TCMB günlük kurunu çek.
 [triggers]
