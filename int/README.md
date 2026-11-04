@@ -6,6 +6,7 @@ Cloudflare Access korur: yalnızca izin listesindeki e-postalar girebilir.
 | Yol | Ne |
 |---|---|
 | `int/finance_dashboard/` | DeltaX Financial Tracker (statik sayfa, GitHub Pages sunar) |
+| `int/production_plan/` | Üretim planı ilerleme sayfası: her görev için yeşil tik / kırmızı X (statik sayfa; veri API'den gelir) |
 | `int/api/` | Veri API'si: Cloudflare Worker + D1. Cloudflare "Workers Builds" bu klasörü her push'ta dağıtır |
 
 Veri repoda **durmaz**; D1 veritabanındadır. Repo herkese açık olduğu için buraya hiçbir
@@ -64,3 +65,38 @@ gerçek rakam, e-posta listesi ya da gizli değer yazılmaz.
 ## Yerelde deneme
 Worker için Node ve `npx wrangler dev` gerekir. Sadece sayfayı denemek için küçük bir sahte API yeterli;
 Claude bu amaçla Python ile bir mock sunucu kullandı. Gerçek doğrulama Cloudflare'da yapılır.
+
+## Üretim planı sayfası (`int/production_plan/`)
+
+Her görev için büyük yeşil **tik** (bitti) ya da kırmızı **X** (henüz değil) gösteren ilerleme sayfası.
+
+- Sayfa statiktir; veriyi `GET /int/api/plan/current` verir (D1, `plan` koleksiyonu, tek belge `current`).
+  Veri repoda **durmaz**: repo herkese açık, plan yalnızca Access'ten geçenlere görünür.
+- Veriyi oyun reposundaki `tools/website/plan-status.py` üretir: `production/production-plan.md` dosyasını
+  `origin/develop` üzerinden okur, her görevi done / progress / todo olarak sınıflar ve bir önceki yayına göre
+  değişenleri "Recent changes" kutusuna yazar. Plan 100 satırdan az çıkarsa ya da öncekinden %20'den fazla
+  küçülürse yayınlamaz.
+- Her gece 03:00 testinden önce (02:30) bir iş `plan-status.py --fetch --push` çalıştırır: önce casper'da
+  (Windows kutusu), olmazsa Mac'te. Sayfa 36 saatten eski veriyi "güncellenmedi" diye işaretler.
+- Sayfadaki "Who is working on what" bölümü iki karttır (Görkem, Fırat; adlar `int/production_plan/index.html` içindeki
+  `PEOPLE` listesindedir). "Right now" notunu Access'ten geçen herkes sayfadan **Edit** ile yazar; `plan/people`
+  belgesine PUT edilir (yalnızca bu belge ve yalnızca PUT herkese açıktır; silmek ve `plan/current` yönetici işi,
+  eşzamanlı kayıtta `if_version` ile 409). Kartın altındaki liste plandaki "In progress" satırlarından, Owner sütununda
+  adı geçenlerden otomatik gelir; "Dev" (yapay zekâ hatları) satırları listelenmez.
+- Yönetici elle de yükleyebilir: sayfadaki "Admin" kutusundan `plan-status.py --out plan.json` çıktısı seçilir.
+- Sayfayı Access izin listesindeki herkes görür, finans sayfasıyla aynı liste. Finans verisini görmemesi gereken
+  biri listeye eklenecekse önce Worker'da finans koleksiyonlarına e-posta kısıtı eklenmelidir.
+
+### Bir kerelik kurulum (gece işi için servis anahtarı)
+
+1. Zero Trust → **Access → Service credentials → Create Service Token**: ad `plan-nightly`, süre *Non-expiring*.
+   **Client ID** ve **Client Secret** yalnızca bir kez gösterilir; kopyala.
+2. **Access → Applications → DeltaX Finance → Policies → Add a policy**: ad `Plan bot`, Action **Service Auth**,
+   Include → **Service Token** → `plan-nightly`. (Mevcut "Partners" Allow politikası olduğu gibi kalır.)
+3. Worker → **Settings → Variables and Secrets** → Secret `PLAN_SERVICE_ID` = Client ID (`....access` ile biten
+   metnin tamamı). Gerekirse "Deployments" sekmesinden yeniden dağıt.
+4. İşi çalıştıracak makinede `~/.config/deltax/plan-token.json` dosyasını yaz (izin 600, repoya girmez):
+   `{"client_id": "...", "client_secret": "..."}`
+5. Dene: `python3 tools/website/plan-status.py --fetch --push` → `published plan/current ...`.
+   Servis anahtarı yalnızca `GET/PUT /int/api/plan/current` yapabilir; Worker başka her uç noktada 403 verir
+   (`int/api/test/plan-access.test.mjs`).
