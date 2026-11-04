@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Production plan — DeltaX Games</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0b0e14">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <style>
+/* Studio-only progress page: where Chaos Convoy stands. Green tick = done, red X = not done yet.
+   The data is NOT in this file or in the repo (the repo is public): it comes from /int/api/plan/current,
+   which only answers behind Cloudflare Access. No fonts or scripts are loaded from other sites. */
+:root{
+  --page:#0b0e14; --surface:#11151d; --surface2:#161b26; --ink:#e9edf5; --ink2:#b4bdd0; --muted:#8a94a8;
+  --line:#232b3b; --blue:#3d85ff; --orange:#f28231; --focus:#3d85ff;
+  --ok:#22b85c; --no:#e5484d; --warn:#f2b631;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --display:"Arial Black","Helvetica Neue",Arial,system-ui,sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --page:#f6f7fa; --surface:#ffffff; --surface2:#f0f2f7; --ink:#0b0e14; --ink2:#3d4658; --muted:#5f6a80;
+    --line:#dfe3ec; --blue:#0054fe; --orange:#c95a0e; --focus:#0054fe;
+    --ok:#14883f; --no:#c6262b; --warn:#9a6a00;
+    color-scheme:light;
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--page);color:var(--ink);font:1rem/1.55 var(--font);-webkit-font-smoothing:antialiased}
+a{color:var(--blue);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.top{padding:18px 0}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px 28px;flex-wrap:wrap}
+.brand img{height:36px;width:auto;display:block}
+.nav{display:flex;gap:6px 22px;flex-wrap:wrap}
+.nav a{color:var(--ink);text-decoration:none;font-weight:600;font-size:.95rem;padding:6px 0;border-bottom:2px solid transparent}
+.nav a:hover{border-bottom-color:var(--blue)}
+.nav a[aria-current="page"]{border-bottom-color:var(--orange)}
+.nav .out{color:var(--muted)}
+@media (prefers-color-scheme: light){ .brand img{filter:invert(1) hue-rotate(180deg)} }
+
+h1{margin:6px 0 4px;font:900 italic clamp(2rem,6vw,3.2rem)/1 var(--display);text-transform:uppercase;letter-spacing:-.015em}
+.kicker{margin:0;color:var(--orange);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:.8rem}
+.lede{margin:10px 0 0;color:var(--ink2);max-width:62ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 22px;margin:14px 0 0;color:var(--ink2);font-size:.95rem}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend svg{width:22px;height:22px}
+
+.ico{display:block;flex:none}
+.ico.ok{color:var(--ok)} .ico.no{color:var(--no)}
+
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin:22px 0 0;color:var(--muted);font-size:.92rem}
+.meta b{color:var(--ink2);font-weight:600}
+.stale{color:var(--warn);font-weight:600}
+.notice{margin:22px 0;padding:18px 20px;border:1px dashed var(--line);border-radius:14px;background:var(--surface);color:var(--ink2)}
+.notice strong{color:var(--ink)}
+
+.overall{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;margin:22px 0;padding:22px 24px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.overall .ico{width:76px;height:76px}
+.overall .num{font:900 italic clamp(2rem,6vw,3rem)/1 var(--display)}
+.overall .num small{font:600 1rem var(--font);color:var(--muted);font-style:normal}
+.overall .split{margin:6px 0 10px;color:var(--ink2)}
+.bar{height:12px;border-radius:99px;background:var(--surface2);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:99px}
+.bar.mid i{background:var(--orange)}
+
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:12px;margin:0 0 26px}
+.mcard{display:flex;flex-direction:column;gap:2px;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;text-decoration:none;color:var(--ink)}
+.mcard:hover{border-color:var(--blue)}
+.mcard .ico{width:44px;height:44px;margin-bottom:6px}
+.mcard .id{font:900 italic 1.25rem/1.1 var(--display)}
+.mcard .nm{color:var(--muted);font-size:.9rem;margin-bottom:8px}
+.mcard .cnt{font-size:.95rem;color:var(--ink2);margin-bottom:8px}
+.mcard .cnt b{color:var(--ink);font-size:1.15rem}
+
+.recent{margin:0 0 26px;padding:18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.recent h2{margin:0 0 10px;font-size:1.05rem}
+.recent ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.recent li{display:flex;align-items:center;gap:12px;color:var(--ink2);font-size:.95rem}
+.recent li .ico{width:22px;height:22px}
+.recent li .d{color:var(--muted);min-width:5.2em;font-variant-numeric:tabular-nums}
+.recent li .i{color:var(--ink);font-weight:700;white-space:nowrap}
+
+.people{margin:0 0 26px}
+.people>h2{margin:0 0 4px;font-size:1.05rem}
+.people>.hint{margin:0 0 12px;color:var(--muted);font-size:.88rem}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:14px}
+.pcard{padding:18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;gap:10px}
+.pcard p{margin:0}
+.pcard h3{margin:0;font:900 italic 1.25rem/1.1 var(--display);text-transform:uppercase}
+.pcard .lbl{color:var(--muted);font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.pcard .now{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.pcard .now li{padding-left:16px;position:relative;overflow-wrap:anywhere}
+.pcard .now li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:50%;background:var(--orange)}
+.pcard .empty,.pcard .upd{color:var(--muted);font-size:.9rem}
+.pcard .empty{font-style:italic}
+.pcard textarea{font:inherit;width:100%;min-height:7.5em;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);resize:vertical}
+.pcard .btns{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.btn{font:inherit;font-weight:600;font-size:.9rem;padding:7px 14px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);cursor:pointer}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn:disabled{opacity:.6;cursor:default}
+.pcard .msg{font-size:.88rem;color:var(--warn)}
+.ptasks{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.ptasks li{display:grid;grid-template-columns:20px 3.8em 1fr;gap:8px;align-items:center;font-size:.95rem}
+.ptasks .ico{width:20px;height:20px}
+.ptasks .id{font-weight:700;font-variant-numeric:tabular-nums}
+.ptasks .ti{overflow-wrap:anywhere}
+.ptasks .more{grid-column:1/-1;color:var(--muted);font-size:.88rem}
+
+.tools{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:0 0 14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{font:inherit;font-weight:600;font-size:.92rem;padding:9px 14px;background:var(--surface);color:var(--ink2);border:0;border-right:1px solid var(--line);cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--blue);color:#fff}
+.search{flex:1 1 220px;min-width:0;font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.admin{margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:.92rem;color:var(--ink2)}
+
+details.ms{margin:0 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+details.ms>summary{display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;list-style:none}
+details.ms>summary::-webkit-details-marker{display:none}
+details.ms>summary .ico{width:34px;height:34px}
+details.ms>summary .t{font:900 italic 1.2rem/1.1 var(--display);text-transform:uppercase}
+details.ms>summary .t small{font:600 .9rem var(--font);color:var(--muted);text-transform:none;font-style:normal;margin-left:8px}
+details.ms>summary .c{margin-left:auto;color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+details.ms>summary .c b{color:var(--ink)}
+details.ms>summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-4px 4px 0 6px;flex:none}
+details.ms[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+.rows{margin:0;padding:0;list-style:none;border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:36px 4.4em 1fr minmax(6em,14em) 9.5em;gap:6px 14px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--line);border-left:4px solid transparent}
+.row:last-child{border-bottom:0}
+.row.done{border-left-color:var(--ok)} .row.open{border-left-color:var(--no)}
+.row .ico{width:30px;height:30px}
+.row .id{font-weight:700;font-variant-numeric:tabular-nums}
+.row .ti{min-width:0;overflow-wrap:anywhere}
+.row .ow{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+.chip{justify-self:end;font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:99px;border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
+.chip.p{color:var(--orange);border-color:var(--orange)}
+.chip.d{color:var(--ok);border-color:var(--ok)}
+.none{padding:16px 18px;color:var(--muted)}
+@media (max-width:700px){
+  .row{grid-template-columns:30px 3.8em 1fr;padding:10px 12px}
+  .row .ow{display:none}
+  .row .chip{grid-column:3;justify-self:start}
+  .overall{grid-template-columns:1fr}
+  details.ms>summary{padding:12px}
+}
+.foot{margin:34px 0 60px;color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);padding-top:16px}
+@media print{ .tools,.admin,.top{display:none} details.ms{break-inside:avoid} }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-tick" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="currentColor"/><path d="M9 16.8l5 5 9-10.6" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="currentColor"/><path d="M10.4 10.4l11.2 11.2M21.6 10.4L10.4 21.6" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/></symbol>
+  </svg>
+
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="/assets/logo/logo-wordmark-ondark.png" alt="DeltaX Games" width="129" height="36"></a>
+      <nav class="nav" aria-label="Internal">
+        <a href="/int/">Internal</a>
+        <a href="/int/production_plan/" aria-current="page">Production plan</a>
+        <a href="/">Public site</a>
+        <a class="out" href="/cdn-cgi/access/logout">Sign out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="main">
+    <p class="kicker">Studio only</p>
+    <h1>Production plan</h1>
+    <p class="lede">Where Chaos Convoy stands, milestone by milestone. Refreshed every night from the studio's plan.</p>
+    <p class="legend" aria-label="Legend">
+      <span><svg class="ico ok" aria-hidden="true"><use href="#i-tick"/></svg> Done</span>
+      <span><svg class="ico no" aria-hidden="true"><use href="#i-x"/></svg> Not done yet (the label says whether work has started)</span>
+    </p>
+
+    <div id="meta" class="meta" aria-live="polite"></div>
+    <div id="app"><div class="notice">Loading the plan…</div></div>
+
+    <p class="foot">Counts come from the rows of the plan's task tables. "Done" means nothing in the task's scope is left to build; a task can be done and still owe a playtest check. Internal use only, please do not share screenshots outside the studio.</p>
+  </main>
+
+<script>
+(function () {
+  'use strict';
+  var API = '/int/api/plan/current';
+  var PEOPLE_API = '/int/api/plan/people';          // the "right now" notes; anyone signed in may edit them
+  var PEOPLE = ['Görkem', 'Fırat'];                 // the cards shown, in this order; the name is matched against the plan's Owner column
+  var MAX_NOW = 1000;
+  var NS = 'http://www.w3.org/2000/svg';
+  var STALE_HOURS = 36;
+  var state = { data: null, peopleDoc: null, filter: 'all', q: '' };
+  var mePromise = null;
+  function getMe() {
+    if (!mePromise) mePromise = fetch('/int/api/me', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    return mePromise;
+  }
+  var app = document.getElementById('app');
+  var meta = document.getElementById('meta');
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function icon(done, cls) {
+    var s = document.createElementNS(NS, 'svg');
+    s.setAttribute('class', 'ico ' + (done ? 'ok' : 'no') + (cls ? ' ' + cls : ''));
+    s.setAttribute('role', 'img');
+    s.setAttribute('aria-label', done ? 'Done' : 'Not done');
+    var u = document.createElementNS(NS, 'use');
+    u.setAttribute('href', done ? '#i-tick' : '#i-x');
+    s.appendChild(u);
+    return s;
+  }
+  function pct(a, b) { return b ? Math.round((a / b) * 100) : 0; }
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? String(iso || '') : d.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtDay(s) {
+    var d = new Date(s + 'T12:00:00');
+    return isNaN(d) ? String(s || '') : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  function bar(done, total) {
+    var b = el('div', 'bar' + (done === total ? '' : ' mid'));
+    b.setAttribute('role', 'progressbar');
+    b.setAttribute('aria-valuemin', '0'); b.setAttribute('aria-valuemax', String(total)); b.setAttribute('aria-valuenow', String(done));
+    var i = el('i'); i.style.width = pct(done, total) + '%'; b.appendChild(i);
+    return b;
+  }
+
+  function showNotice(html) {
+    app.textContent = '';
+    var n = el('div', 'notice');
+    n.appendChild(html);
+    app.appendChild(n);
+  }
+  function para(strong, rest) {
+    var f = document.createDocumentFragment();
+    f.appendChild(el('strong', null, strong));
+    f.appendChild(document.createTextNode(' ' + rest));
+    return f;
+  }
+
+  /* ---------- rendering ---------- */
+
+  function renderMeta(d) {
+    meta.textContent = '';
+    var upd = el('span'); upd.appendChild(el('b', null, 'Updated ')); upd.appendChild(document.createTextNode(fmtDate(d.generated)));
+    meta.appendChild(upd);
+    if (d.plan && d.plan.version) meta.appendChild(el('span', null, 'Plan v' + d.plan.version + (d.plan.date ? ' (' + d.plan.date + ')' : '')));
+    if (d.source && d.source.commit) meta.appendChild(el('span', null, 'from ' + (d.source.ref || 'develop') + ' ' + d.source.commit));
+    var age = (Date.now() - Date.parse(d.generated)) / 3600e3;
+    if (age > STALE_HOURS) meta.appendChild(el('span', 'stale', 'Not refreshed for ' + Math.floor(age) + ' h: the nightly update may have failed.'));
+  }
+
+  function renderOverall(d) {
+    var t = d.totals, wrap = el('div', 'overall');
+    wrap.appendChild(icon(t.done === t.total));
+    var r = el('div');
+    var n = el('div', 'num', t.done + ' of ' + t.total + ' ');
+    n.appendChild(el('small', null, 'tasks done · ' + pct(t.done, t.total) + '%'));
+    r.appendChild(n);
+    r.appendChild(el('div', 'split', t.progress + ' in progress · ' + t.todo + ' not started'));
+    r.appendChild(bar(t.done, t.total));
+    wrap.appendChild(r);
+    return wrap;
+  }
+
+  function renderCards(d) {
+    var g = el('div', 'mgrid');
+    d.milestones.forEach(function (m) {
+      var a = el('a', 'mcard'); a.href = '#m-' + m.id;
+      a.addEventListener('click', function () { var s = document.getElementById('m-' + m.id); if (s) s.open = true; });
+      a.appendChild(icon(m.done === m.total && m.total > 0));
+      a.appendChild(el('span', 'id', m.id));
+      a.appendChild(el('span', 'nm', m.title));
+      var c = el('span', 'cnt'); c.appendChild(el('b', null, String(m.done))); c.appendChild(document.createTextNode(' of ' + m.total + ' done'));
+      a.appendChild(c);
+      a.appendChild(bar(m.done, m.total));
+      g.appendChild(a);
+    });
+    return g;
+  }
+
+  var CHANGE = {
+    done: ['completed', true], started: ['started', false], reopened: ['reopened', false],
+    paused: ['back to not started', false], added: ['added to the plan', false], removed: ['removed from the plan', false]
+  };
+  function renderRecent(d) {
+    var list = (d.recent || []).slice(0, 10);
+    if (!list.length) return null;
+    var box = el('section', 'recent'); box.setAttribute('aria-labelledby', 'recent-h');
+    var h = el('h2', null, 'Recent changes'); h.id = 'recent-h'; box.appendChild(h);
+    var ul = el('ul');
+    list.forEach(function (c) {
+      var info = CHANGE[c.change] || [c.change, false];
+      var li = el('li');
+      li.appendChild(icon(info[1]));
+      li.appendChild(el('span', 'd', fmtDay(c.date)));
+      li.appendChild(el('span', 'i', c.id));
+      li.appendChild(el('span', null, (c.title || '') + ' — ' + info[0]));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    return box;
+  }
+
+  /* ---------- who is working on what ---------- */
+
+  function notes() {
+    var d = state.peopleDoc && state.peopleDoc.data;
+    return d && Array.isArray(d.people) ? d.people : [];
+  }
+  function noteOf(name) {
+    var all = notes();
+    for (var i = 0; i < all.length; i++) if (all[i] && all[i].name === name) return all[i];
+    return { name: name, now: '' };
+  }
+  function inProgressOf(name) {
+    var key = name.toLowerCase(), out = [];
+    state.data.milestones.forEach(function (m) {
+      m.tasks.forEach(function (t) { if (t.state === 'progress' && (t.owner || '').toLowerCase().indexOf(key) >= 0) out.push(t); });
+    });
+    return out;
+  }
+
+  function savePerson(name, text) {
+    return getMe().then(function (me) {
+      var people = PEOPLE.map(function (n) {
+        if (n === name) return { name: n, now: text.trim().slice(0, MAX_NOW), updated: new Date().toISOString(), by: (me && me.email) || '' };
+        return noteOf(n);
+      });
+      notes().forEach(function (c) { if (c && PEOPLE.indexOf(c.name) < 0) people.push(c); });   // never drop a note whose card is not shown
+      var body = { data: { people: people } };
+      if (state.peopleDoc && state.peopleDoc.version != null) body.if_version = state.peopleDoc.version;
+      return fetch(PEOPLE_API, { method: 'PUT', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) {
+        if (r.status === 409) throw new Error('Someone saved first. Reload the page, then edit again.');
+        if (!r.ok) throw new Error('Could not save (HTTP ' + r.status + ').');
+        return r.json();
+      }).then(function (res) { state.peopleDoc = { data: { people: people }, version: res.version }; });
+    });
+  }
+
+  function renderPerson(name) {
+    var card = el('article', 'pcard');
+    card.appendChild(el('h3', null, name));
+    card.appendChild(el('p', 'lbl', 'Right now'));
+    var body = el('div'); card.appendChild(body);
+
+    function showView() {
+      body.textContent = '';
+      var n = noteOf(name);
+      var lines = String(n.now || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+      if (lines.length) {
+        var ul = el('ul', 'now');
+        lines.forEach(function (l) { ul.appendChild(el('li', null, l)); });
+        body.appendChild(ul);
+      } else {
+        body.appendChild(el('p', 'empty', 'Nothing written yet.'));
+      }
+      var foot = el('div', 'btns');
+      var edit = el('button', 'btn', 'Edit'); edit.type = 'button';
+      edit.setAttribute('aria-label', 'Edit what ' + name + ' is working on');
+      edit.addEventListener('click', showEdit);
+      foot.appendChild(edit);
+      if (n.updated) foot.appendChild(el('span', 'upd', 'Updated ' + fmtDate(n.updated) + (n.by ? ' by ' + n.by : '')));
+      body.appendChild(foot);
+    }
+
+    function showEdit() {
+      body.textContent = '';
+      var ta = el('textarea'); ta.maxLength = MAX_NOW; ta.value = noteOf(name).now || '';
+      ta.setAttribute('aria-label', 'What ' + name + ' is working on, one line per item');
+      ta.placeholder = 'One line per thing, for example: enemy AI, slot board and attack tokens';
+      var btns = el('div', 'btns');
+      var save = el('button', 'btn pri', 'Save'); save.type = 'button';
+      var cancel = el('button', 'btn', 'Cancel'); cancel.type = 'button';
+      var msg = el('span', 'msg'); msg.setAttribute('aria-live', 'polite');
+      save.addEventListener('click', function () {
+        save.disabled = true; msg.textContent = '';
+        savePerson(name, ta.value).then(showView, function (e) { save.disabled = false; msg.textContent = (e && e.message) || 'Could not save.'; });
+      });
+      cancel.addEventListener('click', showView);
+      btns.appendChild(save); btns.appendChild(cancel); btns.appendChild(msg);
+      body.appendChild(ta); body.appendChild(btns);
+      ta.focus();
+    }
+    showView();
+
+    var open = inProgressOf(name);
+    if (open.length) {
+      card.appendChild(el('p', 'lbl', 'In the plan, in progress (' + open.length + ')'));
+      var list = el('ul', 'ptasks');
+      open.slice(0, 8).forEach(function (t) {
+        var li = el('li');
+        li.appendChild(icon(false));
+        li.appendChild(el('span', 'id', t.id));
+        li.appendChild(el('span', 'ti', t.title));
+        list.appendChild(li);
+      });
+      if (open.length > 8) list.appendChild(el('li', 'more', '+ ' + (open.length - 8) + ' more in the milestone lists below'));
+      card.appendChild(list);
+    } else {
+      card.appendChild(el('p', 'upd', 'No in-progress task in the plan names ' + name + '.'));
+    }
+    return card;
+  }
+
+  function renderPeople() {
+    var sec = el('section', 'people'); sec.setAttribute('aria-labelledby', 'people-h');
+    var h = el('h2', null, 'Who is working on what'); h.id = 'people-h'; sec.appendChild(h);
+    sec.appendChild(el('p', 'hint', 'The "Right now" notes are written by the team: press Edit, one line per item. The task list is the plan\'s in-progress rows whose Owner names the person; "Dev" rows (the AI lanes) are not listed here.'));
+    var grid = el('div', 'pgrid');
+    PEOPLE.forEach(function (name) { grid.appendChild(renderPerson(name)); });
+    sec.appendChild(grid);
+    return sec;
+  }
+
+  function matches(t) {
+    if (state.filter === 'done' && t.state !== 'done') return false;
+    if (state.filter === 'open' && t.state === 'done') return false;
+    if (state.q) {
+      var hay = (t.id + ' ' + t.title + ' ' + (t.owner || '')).toLowerCase();
+      if (hay.indexOf(state.q) < 0) return false;
+    }
+    return true;
+  }
+
+  function renderMilestone(m, openIds) {
+    var shown = m.tasks.filter(matches);
+    var det = el('details', 'ms'); det.id = 'm-' + m.id;
+    var searching = state.q || state.filter !== 'all';
+    det.open = openIds[m.id] != null ? openIds[m.id] : (m.done < m.total);
+    if (searching) det.open = shown.length > 0;
+    det.addEventListener('toggle', function () { openIds[m.id] = det.open; });
+    var sum = el('summary');
+    sum.appendChild(icon(m.done === m.total && m.total > 0));
+    var t = el('span', 't', m.id); t.appendChild(el('small', null, m.title)); sum.appendChild(t);
+    var c = el('span', 'c'); c.appendChild(el('b', null, String(m.done))); c.appendChild(document.createTextNode(' / ' + m.total + ' done'));
+    sum.appendChild(c);
+    det.appendChild(sum);
+    if (!shown.length) { det.appendChild(el('div', 'none', searching ? 'No task matches.' : 'No tasks.')); return det; }
+    var ul = el('ul', 'rows');
+    shown.forEach(function (t) {
+      var done = t.state === 'done';
+      var li = el('li', 'row ' + (done ? 'done' : 'open'));
+      li.appendChild(icon(done));
+      li.appendChild(el('span', 'id', t.id));
+      li.appendChild(el('span', 'ti', t.title));
+      li.appendChild(el('span', 'ow', t.owner || ''));
+      var label = done ? (t.done ? 'done ' + fmtDay(t.done) : 'done') : (t.state === 'progress' ? 'in progress' : 'not started');
+      li.appendChild(el('span', 'chip ' + (done ? 'd' : (t.state === 'progress' ? 'p' : '')), label));
+      ul.appendChild(li);
+    });
+    det.appendChild(ul);
+    return det;
+  }
+
+  var openIds = {};
+  var listBox = null;
+
+  function renderList() {
+    listBox.textContent = '';
+    state.data.milestones.forEach(function (m) { listBox.appendChild(renderMilestone(m, openIds)); });
+  }
+
+  function renderAll() {
+    var d = state.data;
+    app.textContent = '';
+    renderMeta(d);
+    app.appendChild(renderOverall(d));
+    app.appendChild(renderCards(d));
+    app.appendChild(renderPeople());
+    var rec = renderRecent(d); if (rec) app.appendChild(rec);
+
+    var tools = el('div', 'tools');
+    var seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Filter');
+    [['all', 'All'], ['open', 'Not done'], ['done', 'Done']].forEach(function (f) {
+      var b = el('button', null, f[1]); b.type = 'button'; b.setAttribute('aria-pressed', state.filter === f[0] ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        state.filter = f[0];
+        Array.prototype.forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        renderList();
+      });
+      seg.appendChild(b);
+    });
+    tools.appendChild(seg);
+    var s = el('input', 'search'); s.type = 'search'; s.placeholder = 'Search id, title or owner'; s.setAttribute('aria-label', 'Search tasks'); s.value = state.q;
+    s.addEventListener('input', function () { state.q = s.value.trim().toLowerCase(); renderList(); });
+    tools.appendChild(s);
+    app.appendChild(tools);
+    var adminSlot = el('div'); adminSlot.id = 'admin-slot'; app.appendChild(adminSlot);
+
+    listBox = el('div'); app.appendChild(listBox);
+    renderList();
+    if (location.hash) { var t = document.getElementById(location.hash.slice(1)); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } }
+  }
+
+  /* ---------- admin: manual upload (fallback when the nightly job is not set up or failed) ---------- */
+
+  function setupAdmin() {
+    getMe().then(function (me) {
+      if (!me || me.role !== 'admin') return;
+      var slot = document.getElementById('admin-slot'); if (!slot) return;
+      var box = el('div', 'admin');
+      box.appendChild(document.createTextNode('Admin: publish by hand (normally the nightly job does this). Choose the plan.json made by '));
+      box.appendChild(el('code', null, 'tools/website/plan-status.py --out plan.json'));
+      box.appendChild(document.createTextNode(': '));
+      var inp = el('input'); inp.type = 'file'; inp.accept = 'application/json,.json'; inp.setAttribute('aria-label', 'plan.json');
+      var msg = el('span', null, ' '); msg.setAttribute('aria-live', 'polite');
+      inp.addEventListener('change', function () {
+        var f = inp.files && inp.files[0]; if (!f) return;
+        f.text().then(function (txt) {
+          var data = JSON.parse(txt);
+          if (!data || !Array.isArray(data.milestones) || !data.totals) throw new Error('not a plan.json');
+          if (state.data && Array.isArray(state.data.recent)) data.recent = state.data.recent; // keep the change history
+          return fetch(API, { method: 'PUT', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data: data }) });
+        }).then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          msg.textContent = ' Published. Reloading…'; setTimeout(function () { location.reload(); }, 600);
+        }).catch(function (e) { msg.textContent = ' Failed: ' + (e && e.message ? e.message : e); });
+      });
+      box.appendChild(inp); box.appendChild(msg);
+      slot.appendChild(box);
+    }).catch(function () {});
+  }
+
+  /* ---------- load ---------- */
+
+  function load() {
+    // the notes load beside the plan; a failure here must never break the page
+    var peopleReq = fetch(PEOPLE_API, { credentials: 'same-origin', cache: 'no-store', headers: { accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    fetch(API, { credentials: 'same-origin', cache: 'no-store', headers: { accept: 'application/json' } }).then(function (r) {
+      if (r.status === 404) {
+        showNotice(para('No plan has been published yet.', 'The nightly job has not run, or it has not been set up. An admin can publish by hand below.'));
+        var slot = el('div'); slot.id = 'admin-slot'; app.appendChild(slot);
+        setupAdmin();
+        return null;
+      }
+      if (r.status === 401 || r.status === 403) { showNotice(para('Not signed in.', 'Reload the page to sign in again.')); return null; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (doc) {
+      if (!doc) return;
+      var d = doc.data;
+      if (!d || !Array.isArray(d.milestones) || !d.totals) throw new Error('unexpected data');
+      state.data = d;
+      return peopleReq.then(function (p) {
+        state.peopleDoc = p;
+        renderAll();
+        setupAdmin();
+      });
+    }).catch(function (e) {
+      showNotice(para('The plan could not be loaded.', 'Your sign-in may have expired: reload the page. (' + (e && e.message ? e.message : e) + ')'));
+    });
+  }
+  load();
+})();
+</script>
+</body>
+</html>

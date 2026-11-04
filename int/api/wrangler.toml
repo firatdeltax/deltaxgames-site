@@ -6,6 +6,8 @@
 #   ACCESS_TEAM_DOMAIN  örn. deltax.cloudflareaccess.com
 #   ACCESS_AUD          Access uygulamasının Audience (AUD) etiketi
 #   ADMIN_EMAILS        virgülle ayrılmış yönetici e-postaları (hesap, kategori, kur ve içe aktarma yetkisi)
+#   PLAN_SERVICE_ID     (isteğe bağlı) üretim planı gece işinin Access servis anahtarının Client ID'si;
+#                       yalnızca plan/current belgesini okuyup yazabilir (bkz. int/README.md, "Üretim planı")
 
 name = "deltax-finance-api"
 main = "src/index.js"

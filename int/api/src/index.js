@@ -17,10 +17,16 @@
  *
  * accounts, categories, rates ve settings koleksiyonlarına yalnızca ADMIN_EMAILS'teki kişiler yazar;
  * transactions'a Access'ten geçen herkes yazar.
+ *
+ * plan koleksiyonu üretim planı sayfasının (int/production_plan) verisidir: tek belge, plan/current.
+ * Access'ten geçen herkes okur; yalnızca yönetici ya da gece işinin Access servis anahtarı yazar.
+ * İstisna: plan/people ("Görkem / Fırat şu an neyle uğraşıyor" notları) belgesini Access'ten geçen herkes PUT ile günceller.
+ * Servis anahtarı (JWT'de e-posta yok, common_name = Client ID; PLAN_SERVICE_ID gizli değeriyle eşleşmeli)
+ * yalnızca GET/PUT /int/api/plan/current yapabilir, başka hiçbir uç noktaya erişemez.
  */
 
-const COLLECTIONS = new Set(['transactions', 'accounts', 'categories', 'rates', 'settings']);
-const ADMIN_ONLY = new Set(['accounts', 'categories', 'rates', 'settings']);
+const COLLECTIONS = new Set(['transactions', 'accounts', 'categories', 'rates', 'settings', 'plan']);
+const ADMIN_ONLY = new Set(['accounts', 'categories', 'rates', 'settings', 'plan']);
 const ID_RE = /^[A-Za-z0-9_\-.~:@+]{1,200}$/;
 const MAX_DOC_BYTES = 256 * 1024;
 const MAX_IMPORT = 2000;
@@ -62,6 +68,11 @@ async function handle(request, env, ctx) {
   const method = request.method.toUpperCase();
   const head = parts[0] || '';
 
+  // Servis anahtarı yalnızca plan/current belgesini okuyup yazabilir.
+  if (user.service && (head !== 'plan' || parts.length !== 2 || parts[1] !== 'current' || (method !== 'GET' && method !== 'PUT'))) {
+    return json({ error: 'Servis anahtarı yalnızca plan/current belgesine erişebilir', code: 'forbidden' }, 403);
+  }
+
   if (head === 'me') {
     if (method !== 'GET') return json({ error: 'Yöntem desteklenmiyor' }, 405);
     return json({ email: user.email, role: user.admin ? 'admin' : 'editor' });
@@ -91,7 +102,9 @@ async function handle(request, env, ctx) {
   }
 
   if (method !== 'POST' && method !== 'PUT' && method !== 'DELETE') return json({ error: 'Yöntem desteklenmiyor' }, 405);
-  if (ADMIN_ONLY.has(col) && !user.admin) {
+  // plan/people ("kim neyle uğraşıyor" notları): Access'ten geçen herkes düzenleyebilir (PUT); silmek ve plan/current yönetici işi.
+  const peopleEdit = col === 'plan' && id === 'people' && method === 'PUT';
+  if (ADMIN_ONLY.has(col) && !user.admin && !user.service && !peopleEdit) {
     return json({ error: 'Bu alanı yalnızca yönetici değiştirebilir', code: 'forbidden' }, 403);
   }
 
@@ -215,7 +228,13 @@ async function authenticate(request, env) {
   }
   if (!token) return null;
   const payload = await verifyAccessJwt(token, team, aud);
-  if (!payload || typeof payload.email !== 'string') return null;
+  if (!payload) return null;
+  if (typeof payload.email !== 'string') {
+    // Access servis anahtarı: JWT'de e-posta yok, common_name Client ID'dir. Yalnızca PLAN_SERVICE_ID ile eşleşirse geçer.
+    const sid = String(env.PLAN_SERVICE_ID || '').trim().toLowerCase();
+    const cn = typeof payload.common_name === 'string' ? payload.common_name.trim().toLowerCase() : '';
+    return sid && cn === sid ? { email: 'plan-bot', admin: false, service: true } : null;
+  }
   const email = payload.email.trim().toLowerCase();
   const admins = String(env.ADMIN_EMAILS || '')
     .toLowerCase()
