@@ -1,5 +1,6 @@
 # DeltaX Financial Tracker — API Worker.
-# Cloudflare "Workers Builds" bu klasörü (int/api) kök alır ve her push'ta `npx wrangler deploy` çalıştırır.
+# Worker GitHub'a bağlı DEĞİL: kod Cloudflare panelinde elle yapıştırılıp dağıtılır (bkz. int/README.md, "Worker kodunu
+# güncelleme"). Bu dosya panele uygulanmaz; binding, route ve cron değerleri panelde elle tanımlanır, burada referanstır.
 #
 # Gizli değerler buraya YAZILMAZ; Cloudflare panelinde Worker > Settings > Variables and Secrets'ta
 # "Secret" olarak tanımlanır (bkz. int/README.md):
