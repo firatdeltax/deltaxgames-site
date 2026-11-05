@@ -7,7 +7,7 @@ Cloudflare Access korur: yalnızca izin listesindeki e-postalar girebilir.
 |---|---|
 | `int/finance_dashboard/` | DeltaX Financial Tracker (statik sayfa, GitHub Pages sunar) |
 | `int/production_plan/` | Üretim planı ilerleme sayfası: her görev için yeşil tik / kırmızı X (statik sayfa; veri API'den gelir) |
-| `int/api/` | Veri API'si: Cloudflare Worker + D1. Cloudflare "Workers Builds" bu klasörü her push'ta dağıtır |
+| `int/api/` | Veri API'si: Cloudflare Worker + D1. Worker GitHub'a **bağlı değildir**: `src/index.js` kaynak kopyadır, kod Cloudflare panelinde elle yapıştırılıp dağıtılır (bkz. "Worker kodunu güncelleme") |
 
 Veri repoda **durmaz**; D1 veritabanındadır. Repo herkese açık olduğu için buraya hiçbir
 gerçek rakam, e-posta listesi ya da gizli değer yazılmaz.
@@ -25,7 +25,7 @@ gerçek rakam, e-posta listesi ya da gizli değer yazılmaz.
 ### 2. Access uygulaması (giriş)
 1. Cloudflare → **Zero Trust** (ilk girişte bir takım adı seçilir; `<takım>.cloudflareaccess.com` olur).
 2. **Access → Applications → Add an application → Self-hosted**.
-   - Application name: `DeltaX Finance`
+   - Application name: `DeltaX Internal` (`/int` altındaki her şeyi korur: finans, üretim planı, API)
    - Domain: `deltaxgames.com`, Path: `int`  (→ `deltaxgames.com/int/*`)
    - Session duration: 1 week
    - Identity providers: **One-time PIN** (e-postaya kod gelir). İstenirse Google da eklenir.
@@ -36,17 +36,32 @@ gerçek rakam, e-posta listesi ya da gizli değer yazılmaz.
 ### 3. D1 veritabanı
 1. Cloudflare → **Workers & Pages → D1 → Create** → ad: `deltax-finance`.
 2. Veritabanının **Console** sekmesine `int/api/schema.sql` içeriğini yapıştır, çalıştır.
-3. **Database ID**'yi kopyala, `int/api/wrangler.toml` içindeki `database_id` satırına yaz, commit et.
+3. **Database ID**'yi kopyala, `int/api/wrangler.toml` içindeki `database_id` satırına referans olarak yaz (panele uygulanmaz; Worker'a bağlama adım 4'te).
 
-### 4. Worker'ı repoya bağla
-1. Cloudflare → **Workers & Pages → Create → Import a repository** → GitHub'ı bağla → `firatdeltax/deltaxgames-site`.
-2. Build ayarları: **Root directory** `int/api`, Build command boş, **Deploy command** `npx wrangler deploy`.
-3. Worker oluşunca **Settings → Variables and Secrets** → üç **Secret** ekle:
+### 4. Worker'ı oluştur (kod elle yapıştırılır)
+Worker GitHub'a bağlı değildir; bu repo yalnızca kaynak kopyayı ve testleri tutar. `wrangler.toml` panele **uygulanmaz**,
+içindeki binding, route ve cron değerleri panelde elle tanımlanır.
+1. Cloudflare → **Workers & Pages → Create → Worker** (boş bir Worker; paneldeki adı serbesttir, bugünkü Worker `muddy-math-d5d1`).
+2. **Edit code** → `int/api/src/index.js` dosyasının tamamını yapıştır → **Deploy** (bkz. "Worker kodunu güncelleme").
+3. **Settings → Bindings**: D1 database, değişken adı `DB` (tam böyle), veritabanı `deltax-finance`.
+4. **Settings → Variables and Secrets** → üç **Secret** ekle:
    - `ACCESS_TEAM_DOMAIN` = `<takım>.cloudflareaccess.com`
    - `ACCESS_AUD` = adım 2'deki AUD etiketi
    - `ADMIN_EMAILS` = yönetici e-postaları, virgülle (hesap, kategori, kur, içe aktarma yetkisi)
-4. **Settings → Triggers**: Route `deltaxgames.com/int/api/*` ve cron `0 13 * * MON-FRI` görünmeli (wrangler.toml'dan gelir).
-   Görünmüyorsa "Deployments" sekmesinden yeniden dağıt.
+5. Route `deltaxgames.com/int/api/*` ve cron `0 13 * * MON-FRI` (`wrangler.toml` içindeki değerler) panelde tanımlı olmalı.
+   `workers.dev` adresi kapalı kalmalı.
+
+### Worker kodunu güncelleme (elle)
+`int/api/src/index.js` değişince (PR `main`'e girdikten sonra) Worker kendiliğinden güncellenmez:
+1. Mac'te Terminal'de, **başka hiçbir şey kopyalamadan**:
+   `curl -s https://raw.githubusercontent.com/firatdeltax/deltaxgames-site/main/int/api/src/index.js | pbcopy`
+   Türkçe karakterler bozuk çıkarsa kabuğun UTF-8 yerel ayarı yoktur: `LC_ALL=en_US.UTF-8 pbcopy` kullan.
+   Kontrol: `LC_ALL=en_US.UTF-8 pbpaste | wc -c` dosyanın bayt sayısını vermeli.
+2. Cloudflare → Workers & Pages → Worker → **Edit code** → tümünü seç, yapıştır → **Deploy**.
+   Dosyanın ilk satırı `/*`, son işlevi `newDocId` olmalı. "requires a Worker written in ES module format" hatası
+   yapıştırmanın bozuk olduğunu gösterir.
+3. Giriş yapmışken `https://deltaxgames.com/int/api/plan/current` adresini aç: `{"error":"Kayıt yok",...}` ya da veri gelmeli.
+   Sorun olursa **Deployments** sekmesinden önceki sürüme dönülür.
 
 ### 5. Veriyi aktar ve dene
 1. Tarayıcıda `https://deltaxgames.com/int/finance_dashboard/` → e-posta → kod → sayfa açılır.
@@ -89,14 +104,18 @@ Her görev için büyük yeşil **tik** (bitti) ya da kırmızı **X** (henüz d
 
 ### Bir kerelik kurulum (gece işi için servis anahtarı)
 
-1. Zero Trust → **Access → Service credentials → Create Service Token**: ad `plan-nightly`, süre *Non-expiring*.
+1. Zero Trust → **Access → Service credentials → Create Service Token**: ad `plan-nightly`, süre **1 yıl** (son kullanma tarihini not et: dolunca yeni anahtar üret, `plan-job.sh set-token` ve `PLAN_SERVICE_ID` yenilenir).
    **Client ID** ve **Client Secret** yalnızca bir kez gösterilir; kopyala.
-2. **Access → Applications → DeltaX Finance → Policies → Add a policy**: ad `Plan bot`, Action **Service Auth**,
-   Include → **Service Token** → `plan-nightly`. (Mevcut "Partners" Allow politikası olduğu gibi kalır.)
+2. **Access controls → Policies → Add a policy**: ad `Plan bot`, Action **Service Auth**,
+   Include → **Service Token** → `plan-nightly` (**Any Access Service Token** seçme). Sonra **Access controls → Applications →
+   DeltaX Internal → Policies → Add existing policy → Plan bot → Save**. (Mevcut "Partners" Allow politikası olduğu gibi kalır.)
+   Kontrol: Reusable policies listesinde Plan bot'un "Used by applications" değeri 1 olmalı.
 3. Worker → **Settings → Variables and Secrets** → Secret `PLAN_SERVICE_ID` = Client ID (`....access` ile biten
-   metnin tamamı). Gerekirse "Deployments" sekmesinden yeniden dağıt.
-4. İşi çalıştıracak makinede `~/.config/deltax/plan-token.json` dosyasını yaz (izin 600, repoya girmez):
-   `{"client_id": "...", "client_secret": "..."}`
-5. Dene: `python3 tools/website/plan-status.py --fetch --push` → `published plan/current ...`.
+   metnin tamamı). Panelden eklenince Worker yeni sürümle dağıtılır.
+4. Oyun reposunda `tools/website/plan-job.sh set-token` (Client ID ve Secret sorulur; casper'daki
+   `%USERPROFILE%\.config\deltax\plan-token.json` dosyasına yazılır, repoya girmez), sonra `plan-job.sh install`,
+   `plan-job.sh dry-run`, `plan-job.sh now` → `published plan/current ...`. (Mac'ten elle: `python3 tools/website/plan-status.py --fetch --push`,
+   anahtar `~/.config/deltax/plan-token.json` içinde.)
+5. Her gece 02:30'da casper'daki görev `SivasPlanPublish` çalışır; başarısız olursa telefona bildirim gider.
    Servis anahtarı yalnızca `GET/PUT /int/api/plan/current` yapabilir; Worker başka her uç noktada 403 verir
    (`int/api/test/plan-access.test.mjs`).
